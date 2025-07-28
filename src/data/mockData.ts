@@ -18,34 +18,7 @@ export const mockProperties: Property[] = [
     yearBuilt: 2018,
     dateAcquired: "2022-03-15",
     marketTrend: [],
-    images: [],
-    expenseTracking: [
-      {
-        id: "exp1",
-        date: "2024-01-15",
-        category: "maintenance",
-        amount: 850,
-        description: "HVAC system maintenance and filter replacement",
-        isDeductible: true
-      },
-      {
-        id: "exp2",
-        date: "2024-02-20",
-        category: "repair",
-        amount: 1200,
-        description: "Plumbing repair in unit 2B",
-        isDeductible: true
-      }
-    ],
-    timeTracking: [
-      {
-        id: "time1",
-        date: "2024-01-20",
-        hours: 3,
-        activity: "Property inspection and tenant communication",
-        hourlyRate: 50
-      }
-    ]
+    images: []
   },
   {
     id: "2",
@@ -63,25 +36,7 @@ export const mockProperties: Property[] = [
     yearBuilt: 2020,
     dateAcquired: "2023-01-20",
     marketTrend: [],
-    images: [],
-    expenseTracking: [
-      {
-        id: "exp3",
-        date: "2024-01-10",
-        category: "improvement",
-        amount: 2500,
-        description: "Kitchen renovation - new appliances",
-        isDeductible: true
-      }
-    ],
-    timeTracking: [
-      {
-        id: "time2",
-        date: "2024-01-15",
-        hours: 2,
-        activity: "Tenant screening and lease preparation"
-      }
-    ]
+    images: []
   },
   {
     id: "3",
@@ -99,25 +54,7 @@ export const mockProperties: Property[] = [
     yearBuilt: 2015,
     dateAcquired: "2021-11-08",
     marketTrend: [],
-    images: [],
-    expenseTracking: [
-      {
-        id: "exp4",
-        date: "2024-02-05",
-        category: "management",
-        amount: 300,
-        description: "Property management fee",
-        isDeductible: true
-      }
-    ],
-    timeTracking: [
-      {
-        id: "time3",
-        date: "2024-02-01",
-        hours: 1.5,
-        activity: "Monthly property review and maintenance check"
-      }
-    ]
+    images: []
   },
   {
     id: "4",
@@ -133,9 +70,7 @@ export const mockProperties: Property[] = [
     yearBuilt: 2010,
     dateAcquired: "2020-08-12",
     marketTrend: [],
-    images: [],
-    expenseTracking: [],
-    timeTracking: []
+    images: []
   }
 ];
 
