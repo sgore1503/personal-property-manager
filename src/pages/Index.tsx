@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Building2, BarChart3 } from "lucide-react";
+import { Plus, Building2, BarChart3, MessageCircle } from "lucide-react";
 import { Property } from "@/types/property";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PortfolioDashboard } from "@/components/PortfolioDashboard";
 import { PropertyTrendChart } from "@/components/PropertyTrendChart";
 import { RentCalculator } from "@/components/RentCalculator";
 import { AddPropertyForm } from "@/components/AddPropertyForm";
+import { AIChatConsultant } from "@/components/AIChatConsultant";
 import { mockProperties } from "@/data/mockData";
 import heroImage from "@/assets/hero-properties.jpg";
 
@@ -15,7 +16,7 @@ const Index = () => {
   const [properties, setProperties] = useState<Property[]>(mockProperties);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'properties' | 'details'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'properties' | 'details' | 'consultant'>('dashboard');
 
   const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images'>) => {
     const newProperty: Property = {
@@ -69,6 +70,17 @@ const Index = () => {
                 />
               ))}
             </div>
+          </div>
+        );
+      
+      case 'consultant':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">AI Investment Consultant</h2>
+              <p className="text-muted-foreground">Get personalized advice to maximize your property portfolio profits</p>
+            </div>
+            <AIChatConsultant properties={properties} />
           </div>
         );
       
@@ -141,6 +153,14 @@ const Index = () => {
                   className="text-sm"
                 >
                   Properties
+                </Button>
+                <Button
+                  variant={currentView === 'consultant' ? 'default' : 'ghost'}
+                  onClick={() => setCurrentView('consultant')}
+                  className="text-sm flex items-center gap-1"
+                >
+                  <MessageCircle className="h-3 w-3" />
+                  AI Consultant
                 </Button>
               </nav>
             </div>
