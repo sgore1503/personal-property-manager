@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { PortfolioDashboard } from "@/components/PortfolioDashboard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
@@ -10,8 +12,12 @@ import { PropertyRecommendations } from "@/components/PropertyRecommendations";
 import { mockProperties } from "@/data/mockData";
 import { Property } from "@/types/property";
 import { generateMarketTrendData } from "@/lib/propertyUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut, Loader2 } from "lucide-react";
 
 const Index = () => {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>(
     mockProperties.map(property => ({
       ...property,
@@ -20,6 +26,29 @@ const Index = () => {
   );
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking'>) => {
     const newProperty: Property = {
@@ -48,9 +77,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-6">
-        <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Property Management Dashboard
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Property Management Dashboard
+          </h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user.email}
+            </span>
+            <Button onClick={handleSignOut} variant="outline" size="sm">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
         
         <Tabs defaultValue="dashboard" className="w-full">
           <TabsList className="grid w-full grid-cols-6">
