@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PortfolioDashboard } from "@/components/PortfolioDashboard";
 import { PropertyCard } from "@/components/PropertyCard";
-import { PropertyTrendChart } from "@/components/PropertyTrendChart";
-import { RentCalculator } from "@/components/RentCalculator";
+import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { AddPropertyForm } from "@/components/AddPropertyForm";
 import { AIChatConsultant } from "@/components/AIChatConsultant";
 import { ExpenseTracker } from "@/components/ExpenseTracker";
@@ -20,6 +19,7 @@ const Index = () => {
     }))
   );
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking'>) => {
     const newProperty: Property = {
@@ -42,6 +42,7 @@ const Index = () => {
 
   const handleViewDetails = (property: Property) => {
     setSelectedProperty(property);
+    setDetailsDialogOpen(true);
   };
 
   return (
@@ -52,11 +53,9 @@ const Index = () => {
         </h1>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="calculator">Calculator</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
             <TabsTrigger value="add-property">Add Property</TabsTrigger>
@@ -79,28 +78,6 @@ const Index = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6">
-            {selectedProperty ? (
-              <PropertyTrendChart
-                data={selectedProperty.marketTrend}
-                title={`${selectedProperty.name} - Market Analysis`}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Select a property to view detailed analytics</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="calculator" className="space-y-6">
-            {selectedProperty ? (
-              <RentCalculator property={selectedProperty} />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Select a property to calculate rent suggestions</p>
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="expenses" className="space-y-6">
             {selectedProperty ? (
@@ -132,6 +109,12 @@ const Index = () => {
             <AIChatConsultant properties={properties} />
           </TabsContent>
         </Tabs>
+
+        <PropertyDetailsDialog 
+          property={selectedProperty}
+          open={detailsDialogOpen}
+          onOpenChange={setDetailsDialogOpen}
+        />
       </div>
     </div>
   );
