@@ -139,7 +139,14 @@ const Index = () => {
 
 
           <TabsContent value="expenses" className="space-y-6">
-            <ExpenseOverview properties={properties} />
+            <ExpenseOverview 
+              properties={properties} 
+              onUpdateProperty={(updatedProperty) => {
+                setProperties(properties.map(p => 
+                  p.id === updatedProperty.id ? updatedProperty : p
+                ));
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="opportunities" className="space-y-6">
