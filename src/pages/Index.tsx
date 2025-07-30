@@ -8,7 +8,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { AddPropertyForm } from "@/components/AddPropertyForm";
 import { AIChatConsultant } from "@/components/AIChatConsultant";
-import { ExpenseTracker } from "@/components/ExpenseTracker";
+import { ExpenseOverview } from "@/components/ExpenseOverview";
 import { PropertyRecommendations } from "@/components/PropertyRecommendations";
 import { mockProperties } from "@/data/mockData";
 import { Property } from "@/types/property";
@@ -139,21 +139,7 @@ const Index = () => {
 
 
           <TabsContent value="expenses" className="space-y-6">
-            {selectedProperty ? (
-              <ExpenseTracker 
-                property={selectedProperty} 
-                onUpdateProperty={(updatedProperty) => {
-                  setProperties(properties.map(p => 
-                    p.id === updatedProperty.id ? updatedProperty : p
-                  ));
-                  setSelectedProperty(updatedProperty);
-                }}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Select a property to track expenses and time</p>
-              </div>
-            )}
+            <ExpenseOverview properties={properties} />
           </TabsContent>
 
           <TabsContent value="opportunities" className="space-y-6">
