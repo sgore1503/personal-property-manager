@@ -1,6 +1,6 @@
-import OpenAI from 'openai';
 import { Property } from '@/types/property';
 import { calculatePropertyMetrics, calculatePortfolioMetrics } from './propertyUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
   id: string;
@@ -10,22 +10,12 @@ export interface ChatMessage {
 }
 
 export class PropertyAIConsultant {
-  private openai: OpenAI | null = null;
-
-  constructor(apiKey?: string) {
-    if (apiKey) {
-      this.openai = new OpenAI({
-        apiKey,
-        dangerouslyAllowBrowser: true
-      });
-    }
+  constructor() {
+    // No need to store API key in the client anymore
   }
 
   setApiKey(apiKey: string) {
-    this.openai = new OpenAI({
-      apiKey,
-      dangerouslyAllowBrowser: true
-    });
+    // API key is now handled securely by Supabase edge function
   }
 
   private generatePropertyAnalysis(properties: Property[]): string {
@@ -53,49 +43,29 @@ export class PropertyAIConsultant {
   }
 
   async getConsultation(message: string, properties: Property[]): Promise<string> {
-    if (!this.openai) {
-      throw new Error('OpenAI API key not provided');
-    }
-
     const propertyAnalysis = this.generatePropertyAnalysis(properties);
     
-    const systemPrompt = `You are an expert real estate investment consultant and property management advisor. 
-
-    Your role is to analyze property portfolios and provide actionable strategies to maximize profit and ROI.
-
-    CURRENT PORTFOLIO DATA:
-    ${propertyAnalysis}
-
-    Guidelines for your responses:
-    - Focus on practical, actionable advice
-    - Consider market trends, cash flow optimization, and value appreciation
-    - Suggest specific improvements like rent adjustments, property improvements, refinancing
-    - Analyze underperforming properties and suggest solutions
-    - Consider tax implications and investment strategies
-    - Be concise but thorough in your recommendations
-    - Use specific numbers from the portfolio data when relevant
-
-    Always provide:
-    1. Direct answer to the user's question
-    2. Specific recommendations based on their portfolio
-    3. Potential ROI impact of suggestions
-    4. Next steps they should consider`;
-
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
+      const { data, error } = await supabase.functions.invoke('ai-property-consultant', {
+        body: {
+          message,
+          portfolioAnalysis: propertyAnalysis
+        }
       });
 
-      return completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error('Failed to get AI consultation. Please try again.');
+      }
+
+      if (!data?.content) {
+        throw new Error('No response received from AI consultant.');
+      }
+
+      return data.content;
     } catch (error) {
-      console.error('OpenAI API Error:', error);
-      throw new Error('Failed to get AI consultation. Please check your API key and try again.');
+      console.error('AI consultation error:', error);
+      throw new Error('Failed to get AI consultation. Please try again.');
     }
   }
 

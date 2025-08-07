@@ -2,10 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, Bot, User, Key, Lightbulb, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, Bot, User, Lightbulb, Loader2 } from 'lucide-react';
 import { Property } from '@/types/property';
 import { PropertyAIConsultant, ChatMessage } from '@/lib/aiConsultant';
 import { useToast } from '@/hooks/use-toast';
@@ -18,52 +17,14 @@ export const AIChatConsultant = ({ properties }: AIChatConsultantProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(true);
   const [consultant] = useState(() => new PropertyAIConsultant());
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for stored API key
-    const storedApiKey = localStorage.getItem('openai_api_key');
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-      consultant.setApiKey(storedApiKey);
-      setShowApiKeyInput(false);
-      loadSuggestedQuestions();
-    }
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const loadSuggestedQuestions = async () => {
-    try {
-      const questions = await consultant.getSuggestedQuestions(properties);
-      setSuggestedQuestions(questions);
-    } catch (error) {
-      console.error('Failed to load suggested questions:', error);
-    }
-  };
-
-  const handleApiKeySubmit = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenAI API key to use the AI consultant.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    localStorage.setItem('openai_api_key', apiKey);
-    consultant.setApiKey(apiKey);
-    setShowApiKeyInput(false);
     loadSuggestedQuestions();
-
+    
     // Add welcome message
     const welcomeMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -83,7 +44,21 @@ What would you like to discuss about your property portfolio?`,
     };
 
     setMessages([welcomeMessage]);
+  }, [properties.length]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadSuggestedQuestions = async () => {
+    try {
+      const questions = await consultant.getSuggestedQuestions(properties);
+      setSuggestedQuestions(questions);
+    } catch (error) {
+      console.error('Failed to load suggested questions:', error);
+    }
   };
+
 
   const sendMessage = async (messageText?: string) => {
     const text = messageText || inputMessage.trim();
@@ -130,50 +105,6 @@ What would you like to discuss about your property portfolio?`,
     }
   };
 
-  if (showApiKeyInput) {
-    return (
-      <Card className="p-6">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Bot className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-semibold text-foreground">AI Property Consultant</h3>
-          </div>
-          
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Get personalized investment advice and profit maximization strategies for your property portfolio.
-          </p>
-
-          <div className="max-w-sm mx-auto space-y-3">
-            <div className="text-left">
-              <Label htmlFor="apiKey" className="flex items-center gap-2">
-                <Key className="h-4 w-4" />
-                OpenAI API Key
-              </Label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="sk-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Your API key is stored locally and never sent to our servers.
-              </p>
-            </div>
-            
-            <Button onClick={handleApiKeySubmit} className="w-full">
-              Start Consultation
-            </Button>
-          </div>
-
-          <div className="text-xs text-muted-foreground mt-4">
-            <p>Don't have an API key? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get one from OpenAI</a></p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
 
   return (
     <Card className="flex flex-col h-[600px]">
