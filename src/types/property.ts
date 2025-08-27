@@ -17,6 +17,7 @@ export interface Property {
   images: string[];
   expenseTracking: ExpenseRecord[];
   timeTracking: TimeRecord[];
+  billTracking: BillRecord[];
 }
 
 export interface ExpenseRecord {
@@ -34,6 +35,19 @@ export interface TimeRecord {
   hours: number;
   activity: string;
   hourlyRate?: number;
+}
+
+export interface BillRecord {
+  id: string;
+  name: string;
+  category: 'mortgage' | 'insurance' | 'utilities' | 'management' | 'maintenance' | 'taxes' | 'other';
+  amount: number;
+  dueDate: string;
+  frequency: 'monthly' | 'quarterly' | 'annually' | 'one-time';
+  isPaid: boolean;
+  lastPaidDate?: string;
+  notes?: string;
+  autoPayEnabled: boolean;
 }
 
 export interface MarketTrendData {

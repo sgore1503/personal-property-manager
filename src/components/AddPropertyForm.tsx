@@ -8,7 +8,7 @@ import { Property } from "@/types/property";
 import { Plus, Home } from "lucide-react";
 
 interface AddPropertyFormProps {
-  onAddProperty: (property: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking'>) => void;
+  onAddProperty: (property: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking' | 'billTracking'>) => void;
   onCancel: () => void;
 }
 

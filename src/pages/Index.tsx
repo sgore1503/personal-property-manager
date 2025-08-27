@@ -52,7 +52,7 @@ const Index = () => {
     return null;
   }
 
-  const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking'>) => {
+  const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking' | 'billTracking'>) => {
     const newProperty: Property = {
       ...newPropertyData,
       id: Date.now().toString(),
@@ -62,11 +62,13 @@ const Index = () => {
         marketTrend: [],
         images: [],
         expenseTracking: [],
-        timeTracking: []
+        timeTracking: [],
+        billTracking: []
       }),
       images: [],
       expenseTracking: [],
-      timeTracking: []
+      timeTracking: [],
+      billTracking: []
     };
     setProperties([...properties, newProperty]);
   };

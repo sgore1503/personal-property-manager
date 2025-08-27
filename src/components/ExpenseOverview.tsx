@@ -11,6 +11,7 @@ import { Receipt, TrendingUp, Lightbulb, DollarSign, Calendar, Plus } from 'luci
 import { Property, ExpenseRecord } from "@/types/property";
 import { calculateTaxBenefits } from "@/lib/propertyUtils";
 import { useToast } from "@/hooks/use-toast";
+import { BillTracker } from "@/components/BillTracker";
 
 interface ExpenseOverviewProps {
   properties: Property[];
@@ -306,6 +307,9 @@ export const ExpenseOverview = ({ properties, onUpdateProperty }: ExpenseOvervie
           </div>
         </CardContent>
       </Card>
+
+      {/* Bill Tracker */}
+      <BillTracker properties={properties} onUpdateProperty={onUpdateProperty} />
 
       {/* Tax Tips & Suggestions */}
       <Card>

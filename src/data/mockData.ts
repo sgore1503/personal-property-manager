@@ -45,6 +45,31 @@ export const mockProperties: Property[] = [
         activity: "Property inspection and tenant communication",
         hourlyRate: 50
       }
+    ],
+    billTracking: [
+      {
+        id: "bill1",
+        name: "Property Insurance",
+        category: "insurance",
+        amount: 180,
+        dueDate: "2024-03-15",
+        frequency: "monthly",
+        isPaid: false,
+        notes: "Annual property insurance premium",
+        autoPayEnabled: true
+      },
+      {
+        id: "bill2",
+        name: "HOA Fees",
+        category: "management",
+        amount: 250,
+        dueDate: "2024-03-01",
+        frequency: "monthly",
+        isPaid: true,
+        lastPaidDate: "2024-02-28",
+        notes: "Monthly HOA management fee",
+        autoPayEnabled: true
+      }
     ]
   },
   {
@@ -80,6 +105,19 @@ export const mockProperties: Property[] = [
         date: "2024-01-15",
         hours: 2,
         activity: "Tenant screening and lease preparation"
+      }
+    ],
+    billTracking: [
+      {
+        id: "bill3",
+        name: "Electricity Bill",
+        category: "utilities",
+        amount: 95,
+        dueDate: "2024-03-10",
+        frequency: "monthly",
+        isPaid: false,
+        notes: "Monthly electricity for common areas",
+        autoPayEnabled: false
       }
     ]
   },
@@ -117,6 +155,31 @@ export const mockProperties: Property[] = [
         hours: 1.5,
         activity: "Monthly property review and maintenance check"
       }
+    ],
+    billTracking: [
+      {
+        id: "bill4",
+        name: "Property Taxes",
+        category: "taxes",
+        amount: 420,
+        dueDate: "2024-04-01",
+        frequency: "quarterly",
+        isPaid: false,
+        notes: "Quarterly property tax payment",
+        autoPayEnabled: false
+      },
+      {
+        id: "bill5",
+        name: "Water & Sewer",
+        category: "utilities",
+        amount: 65,
+        dueDate: "2024-02-25",
+        frequency: "monthly",
+        isPaid: true,
+        lastPaidDate: "2024-02-20",
+        notes: "Monthly water and sewer bill",
+        autoPayEnabled: true
+      }
     ]
   },
   {
@@ -135,7 +198,20 @@ export const mockProperties: Property[] = [
     marketTrend: [],
     images: [],
     expenseTracking: [],
-    timeTracking: []
+    timeTracking: [],
+    billTracking: [
+      {
+        id: "bill6",
+        name: "Commercial Insurance",
+        category: "insurance",
+        amount: 450,
+        dueDate: "2024-03-20",
+        frequency: "monthly",
+        isPaid: false,
+        notes: "Monthly commercial property insurance",
+        autoPayEnabled: true
+      }
+    ]
   }
 ];
 
