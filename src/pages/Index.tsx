@@ -10,7 +10,7 @@ import { AddPropertyForm } from "@/components/AddPropertyForm";
 import { AIChatConsultant } from "@/components/AIChatConsultant";
 import { ExpenseOverview } from "@/components/ExpenseOverview";
 import { PropertyRecommendations } from "@/components/PropertyRecommendations";
-import { mockProperties } from "@/data/mockData";
+
 import { Property } from "@/types/property";
 import { generateMarketTrendData } from "@/lib/propertyUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,12 +19,7 @@ import { LogOut, Loader2 } from "lucide-react";
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [properties, setProperties] = useState<Property[]>(
-    mockProperties.map(property => ({
-      ...property,
-      marketTrend: generateMarketTrendData(property)
-    }))
-  );
+  const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
