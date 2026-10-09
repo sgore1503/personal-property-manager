@@ -21,6 +21,9 @@ export const AddPropertyForm = ({ onAddProperty, onCancel }: AddPropertyFormProp
     currentValue: '',
     monthlyRent: '',
     monthlyMortgage: '',
+    interestRate: '6.5',
+    loanTermYears: '30',
+    downPaymentPercent: '20',
     expenses: '',
     squareFootage: '',
     bedrooms: '',
@@ -40,6 +43,9 @@ export const AddPropertyForm = ({ onAddProperty, onCancel }: AddPropertyFormProp
       currentValue: parseFloat(formData.currentValue),
       monthlyRent: parseFloat(formData.monthlyRent),
       monthlyMortgage: parseFloat(formData.monthlyMortgage),
+      interestRate: parseFloat(formData.interestRate),
+      loanTermYears: parseInt(formData.loanTermYears),
+      downPaymentPercent: parseFloat(formData.downPaymentPercent),
       expenses: parseFloat(formData.expenses),
       squareFootage: parseFloat(formData.squareFootage),
       bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
@@ -161,6 +167,46 @@ export const AddPropertyForm = ({ onAddProperty, onCancel }: AddPropertyFormProp
               value={formData.expenses}
               onChange={(e) => handleInputChange('expenses', e.target.value)}
               placeholder="400"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="interestRate">Interest Rate (%)</Label>
+            <Input
+              id="interestRate"
+              type="number"
+              step="0.01"
+              value={formData.interestRate}
+              onChange={(e) => handleInputChange('interestRate', e.target.value)}
+              placeholder="6.5"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="loanTermYears">Loan Term (years)</Label>
+            <Input
+              id="loanTermYears"
+              type="number"
+              value={formData.loanTermYears}
+              onChange={(e) => handleInputChange('loanTermYears', e.target.value)}
+              placeholder="30"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="downPaymentPercent">Down Payment (%)</Label>
+            <Input
+              id="downPaymentPercent"
+              type="number"
+              step="0.1"
+              value={formData.downPaymentPercent}
+              onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
+              placeholder="20"
               required
             />
           </div>

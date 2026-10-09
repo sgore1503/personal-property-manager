@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyTrendChart } from "@/components/PropertyTrendChart";
 import { RentCalculator } from "@/components/RentCalculator";
+import { InvestmentProjection } from "@/components/InvestmentProjection";
 import { Property } from "@/types/property";
 
 interface PropertyDetailsDialogProps {
@@ -20,11 +21,16 @@ export const PropertyDetailsDialog = ({ property, open, onOpenChange }: Property
           <DialogTitle>{property.name} - Details</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="projection" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="projection">Investment Projection</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="calculator">Rent Calculator</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="projection" className="space-y-6">
+            <InvestmentProjection property={property} />
+          </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
             <PropertyTrendChart

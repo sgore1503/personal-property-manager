@@ -63,7 +63,8 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
           title="Portfolio Value"
           value={`$${(metrics.totalValue / 1000000).toFixed(1)}M`}
           subtitle={`$${metrics.totalValue.toLocaleString()}`}
-          trend="+12.3%"
+          trend={`${metrics.totalValue >= metrics.totalPurchasePrice ? '+' : ''}${(((metrics.totalValue - metrics.totalPurchasePrice) / metrics.totalPurchasePrice) * 100).toFixed(1)}%`}
+          trendColor={metrics.totalValue >= metrics.totalPurchasePrice ? "text-success" : "text-destructive"}
         />
         
         <MetricCard
@@ -79,8 +80,7 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
           icon={PiggyBank}
           title="Total Equity"
           value={`$${(metrics.totalEquity / 1000).toFixed(0)}K`}
-          subtitle={`$${metrics.totalEquity.toLocaleString()}`}
-          trend="+8.7%"
+          subtitle={`${metrics.totalValue > 0 ? ((metrics.totalEquity / metrics.totalValue) * 100).toFixed(0) : 0}% of value`}
         />
       </div>
 
@@ -105,9 +105,13 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Cash-on-Cash Return</span>
               <span className="font-semibold text-foreground">
-                {properties.length > 0 ? 
-                  ((metrics.totalCashFlow * 12) / (metrics.totalValue * 0.2) * 100).toFixed(1) : 0
-                }%
+                {metrics.portfolioCashOnCash.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Debt Service Coverage Ratio</span>
+              <span className={`font-semibold ${metrics.portfolioDSCR >= 1.2 ? 'text-success' : metrics.portfolioDSCR >= 1 ? 'text-foreground' : 'text-destructive'}`}>
+                {isFinite(metrics.portfolioDSCR) ? metrics.portfolioDSCR.toFixed(2) : '—'}
               </span>
             </div>
           </div>

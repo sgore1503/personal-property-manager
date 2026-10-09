@@ -12,14 +12,17 @@ import { ExpenseOverview } from "@/components/ExpenseOverview";
 import { PropertyRecommendations } from "@/components/PropertyRecommendations";
 
 import { Property } from "@/types/property";
-import { generateMarketTrendData } from "@/lib/propertyUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { fetchProperties, createProperty, addExpenseRecord, NewPropertyInput } from "@/lib/propertyData";
 import { LogOut, Loader2 } from "lucide-react";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -29,6 +32,33 @@ const Index = () => {
       navigate("/auth");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    setPropertiesLoading(true);
+    fetchProperties(user.id)
+      .then((data) => {
+        if (!cancelled) setProperties(data);
+      })
+      .catch((error) => {
+        console.error("Failed to load properties", error);
+        toast({
+          title: "Couldn't load properties",
+          description: error?.message || "Please refresh and try again.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setPropertiesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -47,25 +77,38 @@ const Index = () => {
     return null;
   }
 
-  const handleAddProperty = (newPropertyData: Omit<Property, 'id' | 'marketTrend' | 'images' | 'expenseTracking' | 'timeTracking' | 'billTracking'>) => {
-    const newProperty: Property = {
-      ...newPropertyData,
-      id: Date.now().toString(),
-      marketTrend: generateMarketTrendData({
-        ...newPropertyData,
-        id: Date.now().toString(),
-        marketTrend: [],
-        images: [],
-        expenseTracking: [],
-        timeTracking: [],
-        billTracking: []
-      }),
-      images: [],
-      expenseTracking: [],
-      timeTracking: [],
-      billTracking: []
-    };
-    setProperties([...properties, newProperty]);
+  const handleAddProperty = async (newPropertyData: NewPropertyInput) => {
+    if (!user) return;
+    try {
+      const created = await createProperty(user.id, newPropertyData);
+      setProperties((prev) => [created, ...prev]);
+      toast({ title: "Property added", description: `${created.name} was saved to your portfolio.` });
+    } catch (error: any) {
+      console.error("Failed to create property", error);
+      toast({
+        title: "Couldn't save property",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddExpense = async (propertyId: string, expense: Parameters<typeof addExpenseRecord>[1]) => {
+    try {
+      const saved = await addExpenseRecord(propertyId, expense);
+      setProperties((prev) =>
+        prev.map((p) =>
+          p.id === propertyId ? { ...p, expenseTracking: [...p.expenseTracking, saved] } : p
+        )
+      );
+    } catch (error: any) {
+      console.error("Failed to save expense", error);
+      toast({
+        title: "Couldn't save expense",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewDetails = (property: Property) => {
@@ -113,6 +156,10 @@ const Index = () => {
                 }} 
                 onCancel={() => setShowAddForm(false)} 
               />
+            ) : propertiesLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -138,6 +185,7 @@ const Index = () => {
           <TabsContent value="expenses" className="space-y-6">
             <ExpenseOverview 
               properties={properties} 
+              onAddExpense={handleAddExpense}
               onUpdateProperty={(updatedProperty) => {
                 setProperties(properties.map(p => 
                   p.id === updatedProperty.id ? updatedProperty : p

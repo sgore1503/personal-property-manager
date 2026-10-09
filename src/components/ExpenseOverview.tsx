@@ -16,9 +16,10 @@ import { BillTracker } from "@/components/BillTracker";
 interface ExpenseOverviewProps {
   properties: Property[];
   onUpdateProperty: (property: Property) => void;
+  onAddExpense?: (propertyId: string, expense: Omit<ExpenseRecord, 'id'>) => Promise<void> | void;
 }
 
-export const ExpenseOverview = ({ properties, onUpdateProperty }: ExpenseOverviewProps) => {
+export const ExpenseOverview = ({ properties, onUpdateProperty, onAddExpense }: ExpenseOverviewProps) => {
   const { toast } = useToast();
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
@@ -91,7 +92,7 @@ export const ExpenseOverview = ({ properties, onUpdateProperty }: ExpenseOvervie
     }
   ];
 
-  const addExpense = () => {
+  const addExpense = async () => {
     if (!expenseForm.propertyId || !expenseForm.category || !expenseForm.amount) {
       toast({
         title: "Error",
@@ -104,8 +105,7 @@ export const ExpenseOverview = ({ properties, onUpdateProperty }: ExpenseOvervie
     const property = properties.find(p => p.id === expenseForm.propertyId);
     if (!property) return;
 
-    const newExpense: ExpenseRecord = {
-      id: Date.now().toString(),
+    const newExpense: Omit<ExpenseRecord, 'id'> = {
       date: new Date().toISOString().split('T')[0],
       category: expenseForm.category as ExpenseRecord['category'],
       amount: parseFloat(expenseForm.amount),
@@ -113,12 +113,16 @@ export const ExpenseOverview = ({ properties, onUpdateProperty }: ExpenseOvervie
       isDeductible: expenseForm.isDeductible
     };
 
-    const updatedProperty = {
-      ...property,
-      expenseTracking: [...property.expenseTracking, newExpense]
-    };
-
-    onUpdateProperty(updatedProperty);
+    if (onAddExpense) {
+      // Persists to Supabase; Index.tsx updates local state once the insert succeeds.
+      await onAddExpense(property.id, newExpense);
+    } else {
+      // Fallback: local-state-only, for callers that haven't wired persistence yet.
+      onUpdateProperty({
+        ...property,
+        expenseTracking: [...property.expenseTracking, { ...newExpense, id: Date.now().toString() }]
+      });
+    }
 
     setExpenseForm({ propertyId: '', category: '', amount: '', description: '', isDeductible: true });
     setShowExpenseForm(false);

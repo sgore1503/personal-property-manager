@@ -7,6 +7,9 @@ export interface Property {
   currentValue: number;
   monthlyRent: number;
   monthlyMortgage: number;
+  interestRate: number; // annual %, e.g. 6.5
+  loanTermYears: number; // e.g. 30
+  downPaymentPercent: number; // % of purchasePrice, e.g. 20
   expenses: number;
   squareFootage: number;
   bedrooms?: number;
@@ -96,4 +99,31 @@ export interface PotentialProperty {
   neighborhood: string;
   riskLevel: 'low' | 'medium' | 'high';
   images: string[];
+}
+
+export interface AmortizationEntry {
+  month: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  balance: number;
+}
+
+export interface YearlyProjection {
+  year: number;
+  noi: number;
+  debtService: number;
+  cashFlow: number;
+  loanBalance: number;
+  propertyValue: number;
+}
+
+export interface InvestmentProjection {
+  holdYears: number;
+  initialInvestment: number;
+  yearlyProjections: YearlyProjection[];
+  netSaleProceeds: number;
+  irr: number | null; // null if IRR didn't converge
+  totalCashFlow: number;
+  equityMultiple: number;
 }
