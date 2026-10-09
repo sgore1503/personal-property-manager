@@ -2,11 +2,9 @@ import { Property, PropertyMetrics, RentSuggestion, MarketTrendData, TaxBenefits
 import {
   calculateCapRate,
   calculateCashOnCashReturn,
-  calculateDSCR,
   calculateAnnualDebtService,
   calculateTaxBenefits as calculateTaxBenefitsReal,
-  getLoanAmount,
-  getLoanBalanceAfterYears,
+  getCurrentLoanBalance,
 } from "@/lib/financialEngine";
 
 // Re-exported so existing imports of `calculateTaxBenefits` from this file
@@ -28,14 +26,10 @@ export const calculatePropertyMetrics = (property: Property): PropertyMetrics =>
   // rather than netIncome/purchasePrice, which ignored the loan entirely.
   const annualReturn = calculateCashOnCashReturn(property);
 
-  // Real equity = current value minus the ACTUAL remaining loan balance from the
-  // amortization schedule, not a static "assume 20% down, ignore paydown since" guess.
-  const loanAmount = getLoanAmount(property);
-  const currentYear = new Date().getFullYear();
-  const yearAcquired = new Date(property.dateAcquired).getFullYear();
-  const yearsHeld = Math.max(1, Math.min(currentYear - yearAcquired + 1, property.loanTermYears));
-  const remainingBalance = getLoanBalanceAfterYears(loanAmount, property.interestRate, property.loanTermYears, yearsHeld);
-  const equity = property.currentValue - remainingBalance;
+  // Real equity = current value minus the loan balance remaining TODAY, read off the
+  // amortization schedule at the exact number of payments made since acquisition
+  // (the same balance the "from today" investment projection starts from).
+  const equity = property.currentValue - getCurrentLoanBalance(property);
 
   const appreciation = property.currentValue - property.purchasePrice;
   const taxBenefits = calculateTaxBenefitsReal(property);

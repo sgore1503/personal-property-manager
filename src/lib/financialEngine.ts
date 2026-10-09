@@ -1,4 +1,11 @@
-import { Property, AmortizationEntry, YearlyProjection, InvestmentProjection, TaxBenefits } from "@/types/property";
+import {
+  Property,
+  AmortizationEntry,
+  YearlyProjection,
+  InvestmentProjection,
+  ProjectionBasis,
+  TaxBenefits,
+} from "@/types/property";
 
 // ============================================================================
 // Mortgage math
@@ -55,6 +62,19 @@ export function buildAmortizationSchedule(
   return schedule;
 }
 
+/** Remaining loan balance after a given number of monthly payments (0 = nothing paid yet). */
+export function getLoanBalanceAfterMonths(
+  loanAmount: number,
+  annualInterestRatePercent: number,
+  termYears: number,
+  monthsElapsed: number
+): number {
+  const schedule = buildAmortizationSchedule(loanAmount, annualInterestRatePercent, termYears);
+  const monthIndex = Math.min(Math.floor(monthsElapsed), schedule.length) - 1;
+  if (monthIndex < 0) return loanAmount;
+  return schedule[monthIndex]?.balance ?? 0;
+}
+
 /** Remaining loan balance after a given number of years (for exit/payoff math). */
 export function getLoanBalanceAfterYears(
   loanAmount: number,
@@ -62,10 +82,31 @@ export function getLoanBalanceAfterYears(
   termYears: number,
   yearsElapsed: number
 ): number {
-  const schedule = buildAmortizationSchedule(loanAmount, annualInterestRatePercent, termYears);
-  const monthIndex = Math.min(yearsElapsed * 12, schedule.length) - 1;
-  if (monthIndex < 0) return loanAmount;
-  return schedule[monthIndex]?.balance ?? 0;
+  return getLoanBalanceAfterMonths(loanAmount, annualInterestRatePercent, termYears, yearsElapsed * 12);
+}
+
+/**
+ * Whole months between the acquisition date and `asOf`, clamped to the loan term.
+ * Parses the YYYY-MM-DD string by hand: `new Date("2026-10-09")` is interpreted as
+ * UTC midnight, which is still the previous evening in US time zones and would
+ * make a property bought today look like it was bought yesterday.
+ */
+export function getMonthsHeld(dateAcquired: string, termYears: number, asOf: Date = new Date()): number {
+  const [y, m, d] = dateAcquired.split("-").map(Number);
+  if (!y || !m || !d) return 0;
+  let months = (asOf.getFullYear() - y) * 12 + (asOf.getMonth() + 1 - m);
+  if (asOf.getDate() < d) months -= 1; // the current month's payment hasn't come around yet
+  return Math.max(0, Math.min(months, termYears * 12));
+}
+
+/** Loan balance remaining today, from the actual amortization schedule. */
+export function getCurrentLoanBalance(property: Property, asOf: Date = new Date()): number {
+  return getLoanBalanceAfterMonths(
+    getLoanAmount(property),
+    property.interestRate,
+    property.loanTermYears,
+    getMonthsHeld(property.dateAcquired, property.loanTermYears, asOf)
+  );
 }
 
 /** Total interest and principal paid during a specific calendar year of the loan (year 1 = first 12 months). */
@@ -257,57 +298,96 @@ export const DEFAULT_ASSUMPTIONS: ProjectionAssumptions = {
 
 /**
  * Projects cash flows year by year over a hold period, including a terminal
- * sale, and computes IRR on the full series — this is what the resume claim
- * "financial modeling and investment recommendation" actually requires.
+ * sale, and computes IRR on the full series.
+ *
+ * Two starting points (`basis`), because they answer different questions:
+ *
+ *  - 'acquisition' (default): the clock starts the day the property was bought.
+ *    Value, loan and cash invested (down payment + closing costs) all come from
+ *    the purchase price, so the model is internally consistent. Starting the
+ *    value at today's appraisal instead would credit the gap between purchase
+ *    price and current value as instant profit on day one and overstate IRR.
+ *    Answers: "how is this deal performing since I bought it?"
+ *
+ *  - 'today': the clock starts now. Value is the current value, the loan is
+ *    wherever the amortization schedule says it is today, and the "investment"
+ *    is the equity you could walk away with by selling (current value, less
+ *    selling costs, less the loan balance), because that is the capital you are
+ *    choosing to leave tied up. Answers: "is it worth continuing to hold this?"
+ *    If that equity is zero or negative there is nothing to earn a return on,
+ *    so IRR and equity multiple are reported as null.
+ *
+ * Both: year 1 rent is today's rent and growth applies from year 2; operating
+ * expenses are held flat; debt service comes from the real payment schedule, so
+ * a loan that pays off during the hold stops costing money and its balance is 0.
  */
 export function projectInvestment(
   property: Property,
-  assumptions: ProjectionAssumptions = DEFAULT_ASSUMPTIONS
+  assumptions: ProjectionAssumptions = DEFAULT_ASSUMPTIONS,
+  basis: ProjectionBasis = 'acquisition',
+  asOf: Date = new Date()
 ): InvestmentProjection {
-  const { holdYears, annualAppreciationPercent, annualRentGrowthPercent, sellingCostsPercent } = assumptions;
+  const { annualAppreciationPercent, annualRentGrowthPercent, sellingCostsPercent } = assumptions;
+  // At least one whole year: a zero-year hold has no sale year to compute proceeds from.
+  const holdYears = Math.max(1, Math.floor(assumptions.holdYears));
 
   const loanAmount = getLoanAmount(property);
-  const downPayment = property.purchasePrice * (property.downPaymentPercent / 100);
-  const closingCostsEstimate = property.purchasePrice * 0.03; // typical buyer closing costs
-  const initialInvestment = downPayment + closingCostsEstimate;
+  const schedule = buildAmortizationSchedule(loanAmount, property.interestRate, property.loanTermYears);
+  const balanceAfter = (months: number): number =>
+    months <= 0 ? loanAmount : (schedule[Math.min(months, schedule.length) - 1]?.balance ?? 0);
+  const paymentsBetween = (fromMonth: number, toMonth: number): number =>
+    schedule
+      .filter((e) => e.month > fromMonth && e.month <= toMonth)
+      .reduce((sum, e) => sum + e.principal + e.interest, 0);
 
-  const annualDebtService = calculateAnnualDebtService(property);
+  const monthsHeld = basis === 'today' ? getMonthsHeld(property.dateAcquired, property.loanTermYears, asOf) : 0;
+  const startingValue = basis === 'today' ? property.currentValue : property.purchasePrice;
+  const startingLoanBalance = balanceAfter(monthsHeld);
+
+  const initialInvestment =
+    basis === 'today'
+      ? startingValue * (1 - sellingCostsPercent / 100) - startingLoanBalance
+      : property.purchasePrice * (property.downPaymentPercent / 100) + property.purchasePrice * 0.03; // + typical buyer closing costs
+
   const yearlyProjections: YearlyProjection[] = [];
   const cashFlowsForIRR: number[] = [-initialInvestment];
-
-  let propertyValue = property.currentValue;
-  let annualRent = property.monthlyRent * 12;
   const annualOperatingExpenses = property.expenses * 12;
 
   for (let year = 1; year <= holdYears; year++) {
-    propertyValue = propertyValue * (1 + annualAppreciationPercent / 100);
-    annualRent = annualRent * (1 + annualRentGrowthPercent / 100);
+    const propertyValue = startingValue * Math.pow(1 + annualAppreciationPercent / 100, year);
+    const annualRent = property.monthlyRent * 12 * Math.pow(1 + annualRentGrowthPercent / 100, year - 1);
     const noi = annualRent - annualOperatingExpenses;
-    const loanBalance = getLoanBalanceAfterYears(loanAmount, property.interestRate, property.loanTermYears, year);
-    const cashFlow = noi - annualDebtService;
 
-    yearlyProjections.push({ year, noi, debtService: annualDebtService, cashFlow, loanBalance, propertyValue });
+    const monthStart = monthsHeld + (year - 1) * 12;
+    const monthEnd = monthsHeld + year * 12;
+    const debtService = paymentsBetween(monthStart, monthEnd);
+    const loanBalance = balanceAfter(monthEnd);
+    const cashFlow = noi - debtService;
 
-    const isLastYear = year === holdYears;
-    if (isLastYear) {
-      const sellingCosts = propertyValue * (sellingCostsPercent / 100);
-      const netSaleProceeds = propertyValue - sellingCosts - loanBalance;
-      cashFlowsForIRR.push(cashFlow + netSaleProceeds);
+    yearlyProjections.push({ year, noi, debtService, cashFlow, loanBalance, propertyValue });
+
+    if (year === holdYears) {
+      const netSale = propertyValue * (1 - sellingCostsPercent / 100) - loanBalance;
+      cashFlowsForIRR.push(cashFlow + netSale);
     } else {
       cashFlowsForIRR.push(cashFlow);
     }
   }
 
   const finalYear = yearlyProjections[yearlyProjections.length - 1];
-  const sellingCosts = finalYear.propertyValue * (sellingCostsPercent / 100);
-  const netSaleProceeds = finalYear.propertyValue - sellingCosts - finalYear.loanBalance;
-
+  const netSaleProceeds = finalYear.propertyValue * (1 - sellingCostsPercent / 100) - finalYear.loanBalance;
   const totalCashFlow = yearlyProjections.reduce((sum, y) => sum + y.cashFlow, 0);
-  const irr = calculateIRR(cashFlowsForIRR);
-  const equityMultiple = (totalCashFlow + netSaleProceeds) / initialInvestment;
+
+  const hasEquityToInvest = initialInvestment > 0;
+  const irr = hasEquityToInvest ? calculateIRR(cashFlowsForIRR) : null;
+  const equityMultiple = hasEquityToInvest ? (totalCashFlow + netSaleProceeds) / initialInvestment : null;
 
   return {
+    basis,
     holdYears,
+    monthsHeld,
+    startingValue,
+    startingLoanBalance,
     initialInvestment,
     yearlyProjections,
     netSaleProceeds,

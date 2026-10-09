@@ -118,12 +118,25 @@ export interface YearlyProjection {
   propertyValue: number;
 }
 
+/**
+ * Where the projection's clock starts:
+ *  - 'acquisition': the day the property was bought (purchase price, original loan,
+ *    cash actually invested). Answers "how is this deal performing since I bought it?"
+ *  - 'today': right now (current value, loan balance remaining today, equity you'd
+ *    realize by selling). Answers "is it worth continuing to hold this property?"
+ */
+export type ProjectionBasis = 'acquisition' | 'today';
+
 export interface InvestmentProjection {
+  basis: ProjectionBasis;
   holdYears: number;
-  initialInvestment: number;
+  monthsHeld: number; // months of the loan already paid at the start (0 for 'acquisition')
+  startingValue: number;
+  startingLoanBalance: number;
+  initialInvestment: number; // cash in on day 0 (may be <= 0 for 'today' if underwater)
   yearlyProjections: YearlyProjection[];
   netSaleProceeds: number;
-  irr: number | null; // null if IRR didn't converge
+  irr: number | null; // null if IRR is undefined or didn't converge
   totalCashFlow: number;
-  equityMultiple: number;
+  equityMultiple: number | null; // null if there is no positive equity to invest
 }

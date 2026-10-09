@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, DollarSign, Home, MapPin } from "lucide-react";
 import { Property, PropertyMetrics } from "@/types/property";
 import { calculatePropertyMetrics } from "@/lib/propertyUtils";
+import { formatCurrency } from "@/lib/format";
 
 interface PropertyCardProps {
   property: Property;
@@ -52,7 +53,7 @@ export const PropertyCard = ({ property, onViewDetails }: PropertyCardProps) => 
         <div>
           <div className="text-xs text-muted-foreground mb-1">Cash Flow</div>
           <div className={`text-lg font-semibold ${isPositiveCashFlow ? 'text-success' : 'text-destructive'}`}>
-            {isPositiveCashFlow ? '+' : ''}${metrics.cashFlow.toLocaleString()}
+            {isPositiveCashFlow ? '+' : ''}{formatCurrency(metrics.cashFlow)}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, DollarSign, TrendingUp, PiggyBank } from "lucide-react";
 import { Property } from "@/types/property";
 import { calculatePortfolioMetrics } from "@/lib/propertyUtils";
+import { formatCurrency } from "@/lib/format";
 
 interface PortfolioDashboardProps {
   properties: Property[];
@@ -62,7 +63,7 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
           icon={DollarSign}
           title="Portfolio Value"
           value={`$${(metrics.totalValue / 1000000).toFixed(1)}M`}
-          subtitle={`$${metrics.totalValue.toLocaleString()}`}
+          subtitle={formatCurrency(metrics.totalValue)}
           trend={`${metrics.totalValue >= metrics.totalPurchasePrice ? '+' : ''}${(((metrics.totalValue - metrics.totalPurchasePrice) / metrics.totalPurchasePrice) * 100).toFixed(1)}%`}
           trendColor={metrics.totalValue >= metrics.totalPurchasePrice ? "text-success" : "text-destructive"}
         />
@@ -70,7 +71,7 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
         <MetricCard
           icon={TrendingUp}
           title="Monthly Cash Flow"
-          value={`$${metrics.totalCashFlow.toLocaleString()}`}
+          value={formatCurrency(metrics.totalCashFlow)}
           subtitle="After all expenses"
           trend={metrics.totalCashFlow > 0 ? "+Positive" : "Negative"}
           trendColor={metrics.totalCashFlow > 0 ? "text-success" : "text-destructive"}
@@ -94,12 +95,12 @@ export const PortfolioDashboard = ({ properties }: PortfolioDashboardProps) => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Monthly Rent Income</span>
-              <span className="font-semibold text-success">${metrics.totalRent.toLocaleString()}</span>
+              <span className="font-semibold text-success">{formatCurrency(metrics.totalRent)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Annual Cash Flow</span>
               <span className={`font-semibold ${metrics.totalCashFlow > 0 ? 'text-success' : 'text-destructive'}`}>
-                ${(metrics.totalCashFlow * 12).toLocaleString()}
+                {formatCurrency(metrics.totalCashFlow * 12)}
               </span>
             </div>
             <div className="flex justify-between items-center">

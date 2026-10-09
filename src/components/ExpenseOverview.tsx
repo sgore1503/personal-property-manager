@@ -12,6 +12,7 @@ import { Property, ExpenseRecord } from "@/types/property";
 import { calculateTaxBenefits } from "@/lib/propertyUtils";
 import { useToast } from "@/hooks/use-toast";
 import { BillTracker } from "@/components/BillTracker";
+import { formatCurrency } from "@/lib/format";
 
 interface ExpenseOverviewProps {
   properties: Property[];
@@ -147,25 +148,25 @@ export const ExpenseOverview = ({ properties, onUpdateProperty, onAddExpense }: 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-600">
-                ${totalTaxBenefits.estimatedTaxSavings.toLocaleString()}
+                {formatCurrency(totalTaxBenefits.estimatedTaxSavings)}
               </p>
               <p className="text-sm text-muted-foreground">Est. Tax Savings</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold">
-                ${totalTaxBenefits.annualDeductions.toLocaleString()}
+                {formatCurrency(totalTaxBenefits.annualDeductions)}
               </p>
               <p className="text-sm text-muted-foreground">Annual Deductions</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold">
-                ${totalTaxBenefits.depreciationDeduction.toLocaleString()}
+                {formatCurrency(totalTaxBenefits.depreciationDeduction)}
               </p>
               <p className="text-sm text-muted-foreground">Total Depreciation</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold">
-                ${totalDeductibleExpenses.toLocaleString()}
+                {formatCurrency(totalDeductibleExpenses)}
               </p>
               <p className="text-sm text-muted-foreground">Deductible Expenses</p>
             </div>
@@ -184,7 +185,7 @@ export const ExpenseOverview = ({ properties, onUpdateProperty, onAddExpense }: 
         <CardContent>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-2xl font-bold">${totalExpenses.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalExpenses)}</p>
               <p className="text-sm text-muted-foreground">Total Expenses</p>
             </div>
             <div className="text-center p-4 bg-muted rounded-lg">

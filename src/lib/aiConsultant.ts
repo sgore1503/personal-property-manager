@@ -1,6 +1,7 @@
 import { Property } from '@/types/property';
 import { calculatePropertyMetrics, calculatePortfolioMetrics } from './propertyUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from "@/lib/format";
 
 export interface ChatMessage {
   id: string;
@@ -23,8 +24,8 @@ export class PropertyAIConsultant {
     
     let analysis = `PORTFOLIO OVERVIEW:\n`;
     analysis += `- Total Properties: ${portfolioMetrics.propertyCount}\n`;
-    analysis += `- Portfolio Value: $${portfolioMetrics.totalValue.toLocaleString()}\n`;
-    analysis += `- Monthly Cash Flow: $${portfolioMetrics.totalCashFlow.toLocaleString()}\n`;
+    analysis += `- Portfolio Value: ${formatCurrency(portfolioMetrics.totalValue)}\n`;
+    analysis += `- Monthly Cash Flow: ${formatCurrency(portfolioMetrics.totalCashFlow)}\n`;
     analysis += `- Average Cap Rate: ${portfolioMetrics.averageCapRate.toFixed(1)}%\n\n`;
 
     analysis += `INDIVIDUAL PROPERTIES:\n`;
@@ -32,9 +33,9 @@ export class PropertyAIConsultant {
       const metrics = calculatePropertyMetrics(property);
       analysis += `${index + 1}. ${property.name}\n`;
       analysis += `   - Type: ${property.type}\n`;
-      analysis += `   - Current Value: $${property.currentValue.toLocaleString()}\n`;
-      analysis += `   - Monthly Rent: $${property.monthlyRent.toLocaleString()}\n`;
-      analysis += `   - Monthly Cash Flow: $${metrics.cashFlow.toLocaleString()}\n`;
+      analysis += `   - Current Value: ${formatCurrency(property.currentValue)}\n`;
+      analysis += `   - Monthly Rent: ${formatCurrency(property.monthlyRent)}\n`;
+      analysis += `   - Monthly Cash Flow: ${formatCurrency(metrics.cashFlow)}\n`;
       analysis += `   - Cap Rate: ${metrics.capRate.toFixed(1)}%\n`;
       analysis += `   - Annual Return: ${metrics.annualReturn.toFixed(1)}%\n\n`;
     });
